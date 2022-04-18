@@ -1,0 +1,24 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<style>
+    #mynetwork {
+        height: 500px;
+    }
+</style>
+
+<div class="text-center">
+    <div class="form-inline">
+        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" id="inpSearch">
+        <button class="btn btn-outline-info my-2 my-sm-0" id="btnSearch">Search</button>
+    </div>
+    <br />
+    <div class="border" id="mynetwork"></div>
+</div>
+
+<script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+<script>
+        var HomeAction = '@Url.Action("", "Home")';
+</script>
