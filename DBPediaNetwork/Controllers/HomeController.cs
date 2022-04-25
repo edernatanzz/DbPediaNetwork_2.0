@@ -56,9 +56,8 @@ namespace DBPediaNetwork.Controllers
 
             //Make a SELECT query against the Endpoint
             SparqlResultSet results = endpoint.QueryWithResultSet(query);
-            foreach (SparqlResult result in results)
+            foreach (SparqlResult result in results.Where(w => w.ToString().Contains("resource/")).ToList().Take(5))
             {
-                if (result.ToString().Contains("resource/"))
                     resultString.Add(result.ToString());
             }
 
