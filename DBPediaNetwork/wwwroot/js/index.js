@@ -8,7 +8,15 @@
         edges: []
     },
     init: function () {
+        appIndex.setCanvasHeight();
         appIndex.buttonFunctions();
+    },
+    setCanvasHeight: function () {
+        $(window).resize(function () {
+            $('#mynetwork').css("height", 0);
+            let height = ($('#mynetwork').offset().top - $('footer').offset().top) * -1;
+            $('#mynetwork').css("height", height - 1);
+        }).trigger('resize');
     },
     buttonFunctions: () => {
         $("#btnSearch").click(function () {
@@ -16,9 +24,16 @@
             var pesquisa = "http://dbpedia.org/resource/" + source;
 
             appIndex.data.init();
-            appIndex.data.nodes.push({ id: 1, label: source, originalSource: pesquisa, clicked: true});
+            appIndex.data.nodes.push({ id: 1, label: source, originalSource: pesquisa, clicked: true });
             appIndex.searchPost(pesquisa, 1);
 
+        });
+
+        $("#inpSearch").on('keyup', function (event) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                $("#btnSearch").click();
+            }
         });
     },
     searchPost: function (pesquisa, idPai) {
@@ -38,7 +53,7 @@
                         source = source.split("resource/")[1];
                     }
 
-                    let node = { id: id, label: source, originalSource: originalSource, clicked: false}
+                    let node = { id: id, label: source, originalSource: originalSource, clicked: false }
 
                     appIndex.data.nodes.push(node);
 
