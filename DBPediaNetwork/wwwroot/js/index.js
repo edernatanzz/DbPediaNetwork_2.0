@@ -16,19 +16,19 @@
             var pesquisa = "http://dbpedia.org/resource/" + source;
 
             appIndex.data.init();
-            appIndex.data.nodes.push({ id: 1, label: source, originalSource: pesquisa, clicked: false});
+            appIndex.data.nodes.push({ id: 1, label: source, originalSource: pesquisa, clicked: true});
             appIndex.searchPost(pesquisa, 1);
 
         });
     },
     searchPost: function (pesquisa, idPai) {
+        app.preloader("on");
 
         $.post("Home/Search",
             {
                 pesquisa: pesquisa
             },
             function (result) {
-
 
                 for (i = 0; i < result.length; i++) {
                     let id = (appIndex.data.nodes.length + 1);
@@ -60,6 +60,7 @@
                     var ids = properties.nodes;
                     if (ids > 0) {
                         clickedNode = appIndex.data.nodes[ids - 1];
+                        debugger;
                         if (clickedNode.originalSource.includes("resource/") && !clickedNode.clicked) {
                             clickedNode.clicked = true;
                             appIndex.searchPost(clickedNode.originalSource, clickedNode.id);
@@ -67,9 +68,12 @@
                         console.log(clickedNode);
                     }
                 });
+
+                app.preloader("off");
             })
             .fail(function (result) {
-                console.log("Ocorreu um erro ao pesquisar.")
+                console.log("Ocorreu um erro ao pesquisar.");
+                app.preloader("off");
             });
 
     }

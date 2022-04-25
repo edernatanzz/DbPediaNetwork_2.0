@@ -32,12 +32,19 @@
 
     @RenderBody()
 
+    <div class="modal fade bd-example-modal-lg preloader" data-backdrop="static" data-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content" style="width: 48px">
+                <span class="spinner-border preloader"></span>
+            </div>
+        </div>
+    </div>
+
     @*<div class="container">
             <main role="main" class="pb-3">
                 @RenderBody()
             </main>
         </div>*@
-
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2022 - DBPediaNetwork - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
