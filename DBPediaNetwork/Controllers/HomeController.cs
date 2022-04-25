@@ -43,8 +43,12 @@ namespace DBPediaNetwork.Controllers
             //Use the DBPedia SPARQL endpoint with the default Graph set to DBPedia
             SparqlRemoteEndpoint endpoint = new SparqlRemoteEndpoint(new Uri("http://dbpedia.org/sparql"), "http://dbpedia.org");
 
+            string dbr = pesquisa.Split("resource/")[1];
+            //string query = "SELECT  ?predicate ?object WHERE { dbr:" + dbr + " ?predicate ?object} LIMIT 5";
 
-            string query = "SELECT  ?predicate ?object WHERE { dbr:" + pesquisa + " ?predicate ?object} LIMIT 5";
+            string query = "select distinct ?value where { " +
+                           "dbr:" + dbr + " ?property ?value . " +
+                           "filter ( ?property not in ( rdf:type ) ) } ";
 
             List<string> resultString = new List<string>();
 
@@ -54,10 +58,11 @@ namespace DBPediaNetwork.Controllers
             SparqlResultSet results = endpoint.QueryWithResultSet(query);
             foreach (SparqlResult result in results)
             {
-                resultString.Add(result.ToString());
+                if (result.ToString().Contains("resource/"))
+                    resultString.Add(result.ToString());
             }
 
-            return Json(resultString);
+            return Json(resultString.Take(5));
         }
     }
 }
