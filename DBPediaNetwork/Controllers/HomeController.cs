@@ -51,6 +51,13 @@ namespace DBPediaNetwork.Controllers
                            "filter ( ?property not in ( rdf:type ) ) } " +
                            "limit 200";
 
+            // TODO
+            //string query = "select distinct ?value ?label where { " +
+            //               "dbr:" + dbr + " ?property ?value . " +
+            //               "dbr:" + dbr + " rdfs:label ?label . " +
+            //               "filter ( ?property not in ( rdf:type ) ) } " + // Somente label em ingles
+            //               "limit 200";
+
             List<string> resultString = new List<string>();
 
 
