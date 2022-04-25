@@ -48,20 +48,26 @@ namespace DBPediaNetwork.Controllers
 
             string query = "select distinct ?value where { " +
                            "dbr:" + dbr + " ?property ?value . " +
-                           "filter ( ?property not in ( rdf:type ) ) } ";
+                           "filter ( ?property not in ( rdf:type ) ) } " +
+                           "limit 200";
 
             List<string> resultString = new List<string>();
 
 
 
             //Make a SELECT query against the Endpoint
-            SparqlResultSet results = endpoint.QueryWithResultSet(query);
+            SparqlResultSet results = endpoint.QueryWithResultSet(NormalizaQuery(query));
             foreach (SparqlResult result in results.Where(w => w.ToString().Contains("resource/")).ToList().Take(5))
             {
                     resultString.Add(result.ToString());
             }
 
             return Json(resultString.Take(5));
+        }
+
+        private string NormalizaQuery(string query)
+        {
+            return query.Replace(",", "\\,");
         }
     }
 }
