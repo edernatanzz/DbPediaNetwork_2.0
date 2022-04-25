@@ -60,7 +60,6 @@
                     var ids = properties.nodes;
                     if (ids > 0) {
                         clickedNode = appIndex.data.nodes[ids - 1];
-                        debugger;
                         if (clickedNode.originalSource.includes("resource/") && !clickedNode.clicked) {
                             clickedNode.clicked = true;
                             appIndex.searchPost(clickedNode.originalSource, clickedNode.id);
