@@ -21,12 +21,14 @@
     buttonFunctions: () => {
         $("#btnSearch").click(function () {
             var source = $("#inpSearch").val().trim();
-            var pesquisa = "http://dbpedia.org/resource/" + source;
 
-            appIndex.data.init();
-            appIndex.data.nodes.push({ id: 1, label: source, originalSource: pesquisa, clicked: true });
-            appIndex.searchPost(pesquisa, 1);
+            if (source !== "") {
+                var pesquisa = "http://dbpedia.org/resource/" + source;
 
+                appIndex.data.init();
+                appIndex.data.nodes.push({ id: 1, label: source, originalSource: pesquisa, clicked: true });
+                appIndex.searchPost(pesquisa, 1);
+            }
         });
 
         $("#inpSearch").on('keyup', function (event) {
