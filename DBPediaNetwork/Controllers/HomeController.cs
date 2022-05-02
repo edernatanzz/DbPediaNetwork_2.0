@@ -55,6 +55,7 @@ namespace DBPediaNetwork.Controllers
             nodePrincipal.label = GetResourceLabel(pesquisa);
             nodePrincipal.source = pesquisa;
             nodePrincipal.clicked = true;
+            nodePrincipal.idDad = null;
 
             netWorkData.nodes.Add(nodePrincipal);
 
@@ -69,14 +70,46 @@ namespace DBPediaNetwork.Controllers
         {
             var str = HttpContext.Session.GetString(KEY_NETWORK_DATA);
             Data netWorkData = JsonConvert.DeserializeObject<Data>(str);
+            string dbr = pesquisa.Split("resource/")[1];
 
             var nodePrincipal = netWorkData.nodes.Where(w => w.source == pesquisa).FirstOrDefault();
-            string dbr = pesquisa.Split("resource/")[1];
+            nodePrincipal.clicked = true;
 
             PerformeQueryBuildData(dbr, ref netWorkData, nodePrincipal);
 
             HttpContext.Session.SetString(KEY_NETWORK_DATA, JsonConvert.SerializeObject(netWorkData));
             return Json(netWorkData);
+        }
+
+        [HttpPost]
+        public ActionResult RemoveNode(int id)
+        {
+            var str = HttpContext.Session.GetString(KEY_NETWORK_DATA);
+            Data netWorkData = JsonConvert.DeserializeObject<Data>(str);
+
+            var nodePrincipal = netWorkData.nodes.Where(w => w.id == id).FirstOrDefault();
+
+
+            removeNode(nodePrincipal, ref netWorkData);
+
+            HttpContext.Session.SetString(KEY_NETWORK_DATA, JsonConvert.SerializeObject(netWorkData));
+            return Json(netWorkData);
+        }
+
+        private void removeNode(Node node, ref Data netWorkData)
+        {
+            foreach (var item in netWorkData.nodes.Where(w => w.idDad == node.id).ToList())
+            {
+                removeNode(item, ref netWorkData);
+            }
+
+            netWorkData.nodes.Remove(node);
+
+            foreach (var item in netWorkData.edges.Where(w=> w.to == node.id || w.from == node.id).ToList())
+            {
+
+                netWorkData.edges.Remove(item);
+            }
         }
 
         private void PerformeQueryBuildData(string dbr, ref Data netWorkData, Node nodeDad)
@@ -106,6 +139,7 @@ namespace DBPediaNetwork.Controllers
                 node.label = GetResourceLabel(value);
                 node.source = value;
                 node.color = color;
+                node.idDad = nodeDad.id;
 
                 netWorkData.nodes.Add(node);
                 netWorkData.edges.Add(new Edge
@@ -170,7 +204,7 @@ namespace DBPediaNetwork.Controllers
             var arr1 = HttpContext.Session.GetString("arrColors");
             var arr2 = HttpContext.Session.GetString("arrColorsUsed");
 
-            if(arr1 != null && arr2 != null)
+            if (arr1 != null && arr2 != null)
             {
                 arrColors = JsonConvert.DeserializeObject<List<string>>(HttpContext.Session.GetString("arrColors"));
                 arrColorsUsed = JsonConvert.DeserializeObject<List<string>>(HttpContext.Session.GetString("arrColorsUsed"));
@@ -178,7 +212,7 @@ namespace DBPediaNetwork.Controllers
 
             if (arrColors.Count == 0)
             {
-                arrColors = arrColorsUsed;
+                arrColors = arrColorsUsed.GetRange(0, arrColorsUsed.Count);
                 arrColorsUsed.Clear();
             }
             Random rnd = new Random();

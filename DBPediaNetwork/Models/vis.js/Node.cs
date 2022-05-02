@@ -12,5 +12,6 @@ namespace DBPediaNetwork.Models
         public string source { get; set; }
         public bool clicked { get; set; }
         public string color { get; set; }
+        public int? idDad { get; set; }
     }
 }

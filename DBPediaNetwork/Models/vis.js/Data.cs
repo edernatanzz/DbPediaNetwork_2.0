@@ -18,7 +18,7 @@ namespace DBPediaNetwork.Models.vis.js
 
         public int getNodeId()
         {
-            return this.nodes.Count + 1;
+            return this.nodes.Count() > 0? this.nodes.Aggregate((x, y) => x.id > y.id ? x : y).id + 1 : this.nodes.Count() + 1;
         }
     }
 }
