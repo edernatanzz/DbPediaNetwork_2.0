@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using VDS.RDF;
+using VDS.RDF.Parsing;
 using VDS.RDF.Query;
 
 namespace DBPediaNetwork.Controllers
@@ -18,6 +19,7 @@ namespace DBPediaNetwork.Controllers
     {
         private const int EDGE_LENGTH = 300;
         private const string KEY_NETWORK_DATA = "networkData";
+        private const string KEY_DATABASE = "DATABASE";
         private readonly ILogger<HomeController> _logger;
         SparqlRemoteEndpoint endpoint = new SparqlRemoteEndpoint(new Uri("http://dbpedia.org/sparql"), "http://dbpedia.org");
 
@@ -29,6 +31,8 @@ namespace DBPediaNetwork.Controllers
 
         public IActionResult Index()
         {
+            HttpContext.Session.Remove("arrColors");
+            HttpContext.Session.Remove("arrColorsUsed");
             return View();
         }
 
@@ -44,38 +48,42 @@ namespace DBPediaNetwork.Controllers
         }
 
         [HttpPost]
-        public ActionResult Search(string pesquisa)
+        public ActionResult Search(SearchFilterViewModel filterModel)
         {
             Data netWorkData = new Data();
-            string dbr = pesquisa.Split("resource/")[1];
+            string dbr = filterModel.pesquisa.Split("resource/")[1];
+
+            filterModel.qtdRerouces = (filterModel.qtdRerouces < 10 && filterModel.qtdRerouces > 1) ? filterModel.qtdRerouces : 10;
+            filterModel.qtdLiterais = (filterModel.qtdLiterais < 10 && filterModel.qtdLiterais > 1) ? filterModel.qtdLiterais : 10;
+
 
             // Adiciona o node principal das pesquisas
             Node nodePrincipal = new Node();
             nodePrincipal.id = netWorkData.getNodeId();
-            nodePrincipal.label = GetResourceLabel(pesquisa);
-            nodePrincipal.source = pesquisa;
+            nodePrincipal.label = GetResourceLabel(filterModel.pesquisa);
+            nodePrincipal.source = filterModel.pesquisa;
             nodePrincipal.clicked = true;
             nodePrincipal.idDad = null;
 
             netWorkData.nodes.Add(nodePrincipal);
 
-            PerformeQueryBuildData(dbr, ref netWorkData, nodePrincipal);
+            PerformeQueryBuildData(dbr, ref netWorkData, nodePrincipal, filterModel);
 
             HttpContext.Session.SetString(KEY_NETWORK_DATA, JsonConvert.SerializeObject(netWorkData));
             return Json(netWorkData);
         }
 
         [HttpPost]
-        public ActionResult ExpandChart(string pesquisa)
+        public ActionResult ExpandChart(SearchFilterViewModel filterModel)
         {
             var str = HttpContext.Session.GetString(KEY_NETWORK_DATA);
             Data netWorkData = JsonConvert.DeserializeObject<Data>(str);
-            string dbr = pesquisa.Split("resource/")[1];
+            string dbr = filterModel.pesquisa.Split("resource/")[1];
 
-            var nodePrincipal = netWorkData.nodes.Where(w => w.source == pesquisa).FirstOrDefault();
+            var nodePrincipal = netWorkData.nodes.Where(w => w.source == filterModel.pesquisa).FirstOrDefault();
             nodePrincipal.clicked = true;
 
-            PerformeQueryBuildData(dbr, ref netWorkData, nodePrincipal);
+            PerformeQueryBuildData(dbr, ref netWorkData, nodePrincipal, filterModel);
 
             HttpContext.Session.SetString(KEY_NETWORK_DATA, JsonConvert.SerializeObject(netWorkData));
             return Json(netWorkData);
@@ -105,60 +113,93 @@ namespace DBPediaNetwork.Controllers
 
             netWorkData.nodes.Remove(node);
 
-            foreach (var item in netWorkData.edges.Where(w=> w.to == node.id || w.from == node.id).ToList())
+            foreach (var item in netWorkData.edges.Where(w => w.to == node.id || w.from == node.id).ToList())
             {
 
                 netWorkData.edges.Remove(item);
             }
         }
 
-        private void PerformeQueryBuildData(string dbr, ref Data netWorkData, Node nodeDad)
+        private void PerformeQueryBuildData(string dbr, ref Data netWorkData, Node nodeDad, SearchFilterViewModel filterModel)
         {
-
             string color = getColor();
-            string query = "select distinct ?value where { " +
-                           "dbr:" + dbr + " ?property ?value . " +
-                           "filter ( ?property not in ( rdf:type ) ) } " +
-                           "limit 200";
-
-            List<string> resultString = new List<string>();
-
-            SparqlResultSet results = ExecutSPARQLQuery(query);
-            foreach (SparqlResult result in results.Where(w => w.ToString().Contains("resource/")).ToList().Take(5))
-            {
-                resultString.Add(result.ToString());
-            }
-
+            string aux = string.Empty;
+            string query = string.Empty;
             string value = string.Empty;
-            for (int i = 0; i < resultString.Count(); i++)
+            string[] arrAux = new string[2];
+            SparqlResultSet results = new SparqlResultSet();
+            List<ResultMainQuerySparqlModel> strDataBase = new List<ResultMainQuerySparqlModel>();
+            List<ResultMainQuerySparqlModel> lstResources = new List<ResultMainQuerySparqlModel>();
+            List<ResultMainQuerySparqlModel> lstLiterais = new List<ResultMainQuerySparqlModel>();
+            Node node = new Node();
+
+            query = "select distinct ?property ?value where { " +
+                    "dbr:" + dbr + " ?property ?value . " +
+                    "filter ( ?property not in ( rdf:type ) ) } " +
+                    "limit 1000";
+
+            results = ExecutSPARQLQuery(query);
+
+            if (results != null)
             {
-                value = resultString[i].Replace("?value =", "");
-
-                Node node = new Node();
-                node.id = netWorkData.getNodeId();
-                node.label = GetResourceLabel(value);
-                node.source = value;
-                node.color = color;
-                node.idDad = nodeDad.id;
-
-                netWorkData.nodes.Add(node);
-                netWorkData.edges.Add(new Edge
+                foreach (SparqlResult result in results)
                 {
-                    from = node.id,
-                    to = nodeDad.id,
-                    length = EDGE_LENGTH,
-                    color = node.color
-                });
-            }
+                    arrAux = result.ToString().Split(" , ");
+                    strDataBase.Add(new ResultMainQuerySparqlModel { property = arrAux[0].Replace("?property =", ""), value = arrAux[1].Replace("?value =", "") });
+                }
 
-            // Pinta o node do para para a nova cor
-            netWorkData.nodes.Where(w => w.id == nodeDad.id).FirstOrDefault().color = color;
+                lstResources = strDataBase.Where(w => w.value.Contains("resource/")).Take(filterModel.qtdRerouces).ToList();
+                lstLiterais = strDataBase.Where(w => !w.value.Contains("http") && (w.value.Contains("@en") || !w.value.Contains("@")) && w.value.Length < 40 && w.property.Contains("property")).Take(filterModel.qtdRerouces).ToList();
+
+
+                for (int i = 0; i < lstResources.Count(); i++)
+                {
+                    node = new Node();
+                    node.id = netWorkData.getNodeId();
+                    node.label = GetResourceLabel(lstResources[i].value);
+                    node.source = lstResources[i].value;
+                    node.color = color;
+                    node.idDad = nodeDad.id;
+
+                    netWorkData.nodes.Add(node);
+                    netWorkData.edges.Add(new Edge
+                    {
+                        from = node.id,
+                        to = nodeDad.id,
+                        length = EDGE_LENGTH,
+                        color = node.color
+                    });
+                }
+
+                for (int i = 0; i < lstLiterais.Count(); i++)
+                {
+                    node = new Node();
+                    node.id = netWorkData.getNodeId();
+                    node.label = GetLiteralLabel(lstLiterais[i]);
+                    node.source = lstLiterais[i].property;
+                    node.color = color;
+                    node.idDad = nodeDad.id;
+                    node.shape = "box";
+                    node.clicked = true;
+
+                    netWorkData.nodes.Add(node);
+                    netWorkData.edges.Add(new Edge
+                    {
+                        from = node.id,
+                        to = nodeDad.id,
+                        length = EDGE_LENGTH,
+                        color = node.color
+                    });
+                }
+
+                netWorkData.nodes.Where(w => w.id == nodeDad.id).FirstOrDefault().color = color;
+            }
         }
 
         private string GetResourceLabel(string dbr)
         {
-            string label = string.Empty;
-            if (dbr.Contains("resource"))
+            string label = dbr;
+            if (label.Contains("resource"))
             {
                 string query = "select ?label " +
                                "where { " +
@@ -180,6 +221,18 @@ namespace DBPediaNetwork.Controllers
             return label;
         }
 
+        private string GetLiteralLabel(ResultMainQuerySparqlModel result)
+        {
+            var aux = result.property.Split("/property/")[1];
+            var aux2 = result.value;
+            if (aux2.Contains("@"))
+            {
+                aux2 = aux2.Split("@")[0];
+            }
+
+            return aux + ":" + aux2;
+        }
+
         private SparqlResultSet ExecutSPARQLQuery(string query)
         {
             //Use the DBPedia SPARQL endpoint with the default Graph set to DBPedia
@@ -198,7 +251,7 @@ namespace DBPediaNetwork.Controllers
         private string getColor()
         {
             string color = string.Empty;
-            List<string> arrColors = new List<string> { "#97C2FC", "#FFFF00", "#FB7E81", "#7BE141", "#6E6EFD", "#C2FABC", "#FFA807", "#6E6EFD" };
+            List<string> arrColors = new List<string> { "#718baf", "#97C2FC", "#FB7E81", "#7BE141", "#6E6EFD", "#C2FABC", "#FFA807", "#fd6ee5" };
             List<string> arrColorsUsed = new List<string>();
 
             var arr1 = HttpContext.Session.GetString("arrColors");

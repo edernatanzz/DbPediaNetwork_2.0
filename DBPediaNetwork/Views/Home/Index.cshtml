@@ -62,14 +62,42 @@
         }
 </style>
 <div id="content">
-    <div class="form-inline container">
-        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search" id="inpSearch">
-        <button class="btn btn-outline-info my-2 my-sm-0" id="btnSearch">Search</button>
+    <div class="container">
 
-        <a class="btn btn-outline-info my-2 my-sm-0" asp-controller="Home" asp-action="Index" role="button" style="margin-left: 5px">Limpar</a>
 
+        <div class="row">
+            <div class="col-xs-6">
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Pesquisa</span>
+                    </div>
+                    <input type="search" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="inpSearch">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Resources</span>
+                    </div>
+                    <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="impResources" min="1" max="10" value="5">
+                </div>
+                <div class="input-group input-group-sm mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">Literais</span>
+                    </div>
+                    <input type="number" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" id="impLiterais" min="1" max="10" value="5">
+                </div>
+            </div>
+            <div class="col-xs-6" style="padding-left: 1vw;">
+                <button class="btn btn-outline-info my-2 my-sm-0" id="btnSearch">Search</button>
+
+                <a class="btn btn-outline-info my-2 my-sm-0" asp-controller="Home" asp-action="Index" role="button" style="margin-left: 5px">Limpar</a>
+            </div>
+        </div>
+    <div>
+        <p id="caminhoClick" class="input-group-text" style=" background: #e9ecef; border-radius: 12px; /* font-size: 1em; */ padding: 3px; /* margin-bottom: 30px; */ color: #141414; /* width: auto;*/ display: none; white-space: initial;">
+            Teste
+        </p>
     </div>
-    <br />
+    </div>
     <div class="border" id="mynetwork"></div>
 </div>
 

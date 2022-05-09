@@ -20,8 +20,14 @@
             var source = $("#inpSearch").val().trim();
 
             if (source !== "") {
-                var pesquisa = "http://dbpedia.org/resource/" + source;
-                appIndex.searchPost(pesquisa);
+                var objPost = {
+                    pesquisa: "http://dbpedia.org/resource/" + source,
+                    qtdRerouces: $("#impResources").val(),
+                    qtdLiterais: $("#impLiterais").val()
+                }
+
+                $("#caminhoClick").html("<span>" + source + "</span>").css({ display: 'block' });
+                appIndex.searchPost(objPost);
             }
         });
 
@@ -39,6 +45,7 @@
             //TODO: Investigar o por que o preloader não fecha se chamando nesse contexto.
 
             let id = $(this).attr("nodeid");
+            let nodeLabel = $(this).attr("nodeLabel");
 
             $.post("Home/RemoveNode",
                 {
@@ -55,6 +62,10 @@
                             visibility: "hidden"
                         });
                     }, 501);
+
+                    let partialLabel = $("#caminhoClick").html();
+                    $("#caminhoClick").html(partialLabel + "<b> > </b>" + "<span style=\"text-decoration: line-through\">" + nodeLabel + "</span>");
+
                     app.preloader("off");
                 })
                 .fail(function (result) {
@@ -63,13 +74,11 @@
                 });
         });
     },
-    searchPost: function (pesquisa, endpoint = "Search") {
+    searchPost: function (objPost, endpoint = "Search") {
         app.preloader("on");
 
         $.post("Home/" + endpoint,
-            {
-                pesquisa: pesquisa
-            },
+            { filterModel: objPost },
             function (result) {
                 appIndex.buildChart(result);
                 app.preloader("off");
@@ -94,7 +103,16 @@
                     clickedNode = appIndex.data.nodes.find(obj => { return obj.id === nodeid });
                     if (clickedNode.source.includes("resource/") && !clickedNode.clicked) {
                         clickedNode.clicked = true;
-                        appIndex.searchPost(clickedNode.source, "ExpandChart");
+                        let objPost = {
+                            pesquisa: clickedNode.source,
+                            qtdRerouces: $("#impResources").val(),
+                            qtdLiterais: $("#impLiterais").val()
+                        }
+
+                        let partialLabel = $("#caminhoClick").html();
+                        $("#caminhoClick").html(partialLabel + "<b> > </b>" + "<span>" + clickedNode.label + "</span>");
+
+                        appIndex.searchPost(objPost, "ExpandChart");
                     }
                     console.log(clickedNode);
                 }
@@ -107,13 +125,15 @@
                 if (clickedNode) {
                     if (clickedNode.source.includes("resource/")) {
                         $("#menu #redirectDbpedia").attr("href", clickedNode.source);
-                        //$("#menu #redirectDbpedia").css({display: "block"});
+                        $("#menu #redirectDbpedia").css({ display: "block" });
                     }
                     else {
-                        //$("#menu #redirectDbpedia").css({ display: "none" });
+                        $("#menu #redirectDbpedia").css({ display: "none" });
                     }
 
                     $("#menu #remove").attr("nodeid", clickedNode.id);
+
+                    $("#menu #remove").attr("nodeLabel", clickedNode.label);
 
                     $("#menu").css({
                         top: params.event.pageY + "px",

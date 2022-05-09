@@ -13,5 +13,6 @@ namespace DBPediaNetwork.Models
         public bool clicked { get; set; }
         public string color { get; set; }
         public int? idDad { get; set; }
+        public string shape { get; set; } = "ellipse";
     }
 }
