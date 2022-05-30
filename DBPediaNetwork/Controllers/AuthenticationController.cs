@@ -64,7 +64,7 @@ namespace DBPediaNetwork.Controllers
         }
 
         [HttpPost]
-        public ActionResult RegisterUser(User user)
+        public ActionResult Register(User user)
         {
             if (!String.IsNullOrEmpty(user.email) && !String.IsNullOrEmpty(user.password))
             {
