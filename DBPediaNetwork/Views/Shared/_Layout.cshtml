@@ -1,4 +1,20 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http;
+@using Newtonsoft.Json;
+@using DBPediaNetwork.Models.Authentication;
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    User user = null;
+    string ssUser = HttpContextAccessor.HttpContext.Session.GetString(DBPediaNetwork.Controllers.AuthenticationController.SESSION_KEY_USER);
+    if (!String.IsNullOrEmpty(ssUser))
+    {
+        user = JsonConvert.DeserializeObject<User>(ssUser);
+    }
+
+}
+
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -16,16 +32,41 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                @*<div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                        <ul class="navbar-nav flex-grow-1">
+
+                @*Deslogado*@
+                @if (user == null)
+                {
+                    <div class="navbar-collapse collapse float-right">
+                        <ul class="navbar-nav flex-grow-1" style="margin-left: 80%;">
+
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Authentication" asp-action="Index">Login</a>
                             </li>
+
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Authentication" asp-action="Register">Registrar</a>
+                            </li>
+
+                            @*<li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                                </li>*@
+                        </ul>
+
+                    </div>
+                }
+
+                @*Logado*@
+                else
+                {
+                    <p style="margin: 0; float: right;">Olá @user.name</p>
+                    <div class="navbar-collapse collapse float-right">
+                        <ul class="navbar-nav flex-grow-1" style="margin-left: 80%;">
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Authentication" asp-action="Logout">Logout</a>
                             </li>
                         </ul>
-                    </div>*@
+                    </div>
+                }
             </div>
         </nav>
     </header>

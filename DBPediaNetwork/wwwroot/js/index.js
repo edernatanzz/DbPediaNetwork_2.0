@@ -7,9 +7,11 @@
     },
     setCanvasHeight: function () {
         $(window).resize(function () {
-            $('#mynetwork').css("height", 0);
-            let height = ($('#mynetwork').offset().top - $('footer').offset().top) * -1;
-            $('#mynetwork').css("height", height - 1);
+            if ($('#mynetwork').length) {
+                $('#mynetwork').css("height", 0);
+                let height = ($('#mynetwork').offset().top - $('footer').offset().top) * -1;
+                $('#mynetwork').css("height", height - 1);
+            }
         }).trigger('resize');
     },
     buttonFunctions: () => {
@@ -156,23 +158,26 @@
         }
     },
     hideRigthClickMenu: function () {
-        var i = document.getElementById("menu").style;
-        var canvas = document.getElementById("mynetwork");
 
-        if (document.addEventListener) {
-            canvas.addEventListener('click', function (e) {
-                i.opacity = "0";
-                setTimeout(function () {
-                    i.visibility = "hidden";
-                }, 501);
-            }, false);
-        } else {
-            canvas.attachEvent('onclick', function (e) {
-                i.opacity = "0";
-                setTimeout(function () {
-                    i.visibility = "hidden";
-                }, 501);
-            });
+        if ($('#menu').length) {
+            var i = document.getElementById("menu").style;
+            var canvas = document.getElementById("mynetwork");
+
+            if (document.addEventListener) {
+                canvas.addEventListener('click', function (e) {
+                    i.opacity = "0";
+                    setTimeout(function () {
+                        i.visibility = "hidden";
+                    }, 501);
+                }, false);
+            } else {
+                canvas.attachEvent('onclick', function (e) {
+                    i.opacity = "0";
+                    setTimeout(function () {
+                        i.visibility = "hidden";
+                    }, 501);
+                });
+            }
         }
     }
 };

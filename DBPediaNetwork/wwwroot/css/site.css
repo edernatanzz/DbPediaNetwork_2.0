@@ -86,3 +86,20 @@ body {
     width: 10rem;
     height: 10rem;
 }
+
+
+.nav-link.contrast {
+    border-radius: 0.25rem;
+    font-size: 12px;
+    text-transform: uppercase;
+    padding: 17px 29px 16px;
+    line-height: 1;
+    background-color: #f5f5f5;
+    font-weight: 500;
+    color: rgba(0,0,0,.6);
+    margin: 0.5rem;
+}
+
+.nav-item {
+    text-align: right;
+}

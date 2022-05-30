@@ -1,0 +1,131 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Authentication Page";
+    string loginFailedMsg = (string)ViewData[DBPediaNetwork.Controllers.AuthenticationController.VIEWDATA_FIELD_ERROR];
+}
+
+
+<style>
+    .form-signin {
+        width: 100%;
+        max-width: 330px;
+        padding: 15px;
+        margin: 0 auto;
+    }
+
+        .form-signin .checkbox {
+            font-weight: 400;
+        }
+
+        .form-signin .form-control {
+            position: relative;
+            box-sizing: border-box;
+            height: auto;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+            .form-signin .form-control:focus {
+                z-index: 2;
+            }
+
+        .form-signin input[type="email"] {
+            margin-bottom: -1px;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .form-signin input[type="password"] {
+            margin-bottom: 10px;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+
+    .nav-pills .nav-link {
+        border-radius: 0.25rem;
+        font-size: 12px;
+        text-transform: uppercase;
+        padding: 17px 29px 16px;
+        line-height: 1;
+        background-color: #f5f5f5;
+        font-weight: 500;
+        color: rgba(0,0,0,.6);
+        margin: 0.5rem;
+    }
+</style>
+
+
+<div class="container">
+    <div class="text-center">
+
+        <!-- Pills navs -->
+        <ul class="nav nav-pills nav-justified mb-3 form-signin" id="ex1" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="tab-login" asp-controller="Authentication" asp-action="Index" role="tab"
+                   aria-controls="pills-login" aria-selected="true">Login</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="tab-register" asp-controller="Authentication" asp-action="Register" role="tab"
+                   aria-controls="pills-register" aria-selected="false">Registrar</a>
+            </li>
+        </ul>
+
+        <form class="form-signin" asp-controller="Authentication" asp-action="Login" method="post">
+            <!-- Email input -->
+            <div class="form-outline mb-4">
+                <input type="email" name="email" id="form2Example1" class="form-control" placeholder="Email" />
+            </div>
+
+            <!-- Password input -->
+            <div class="form-outline mb-4">
+                <input type="password" name="password" id="form2Example2" class="form-control" placeholder="Password" />
+            </div>
+
+            <!-- 2 column grid layout for inline styling -->
+            <!--<div class="row mb-4">-->
+            <!--<div class="col d-flex justify-content-center">-->
+            <!-- Checkbox -->
+            <!--<div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="form2Example31" checked />
+                <label class="form-check-label" for="form2Example31"> Remember me </label>
+            </div>
+        </div>-->
+            <!--<div class="col">-->
+            <!-- Simple link -->
+            <!--<a href="#!">Forgot password?</a>
+            </div>
+        </div>-->
+            <!-- Submit button -->
+            <button type="submit" class="btn btn-primary btn-block mb-4">Sign in</button>
+
+            <!-- Register buttons -->
+            @*<div class="text-center">
+                <p>Not a member? <a href="#!">Register</a></p>
+                <p>or sign up with:</p>
+                <button type="button" class="btn btn-link btn-floating mx-1">
+                    <i class="fab fa-facebook-f"></i>
+                </button>
+
+                <button type="button" class="btn btn-link btn-floating mx-1">
+                    <i class="fab fa-google"></i>
+                </button>
+
+                <button type="button" class="btn btn-link btn-floating mx-1">
+                    <i class="fab fa-twitter"></i>
+                </button>
+
+                <button type="button" class="btn btn-link btn-floating mx-1">
+                    <i class="fab fa-github"></i>
+                </button>
+            </div>*@
+        </form>
+
+        @if (!String.IsNullOrEmpty(loginFailedMsg))
+        {
+            <p style="color: red">
+                @loginFailedMsg
+            </p>
+        }
+    </div>
+</div>
