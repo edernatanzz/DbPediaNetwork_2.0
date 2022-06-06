@@ -1,8 +1,11 @@
-﻿using DBPediaNetwork.Models;
+﻿using DBPediaNetwork.Biz;
+using DBPediaNetwork.Models;
+using DBPediaNetwork.Models.Authentication;
 using DBPediaNetwork.Models.vis.js;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using MySqlConnector;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -22,17 +25,20 @@ namespace DBPediaNetwork.Controllers
         private const string KEY_DATABASE = "DATABASE";
         private readonly ILogger<HomeController> _logger;
         SparqlRemoteEndpoint endpoint = new SparqlRemoteEndpoint(new Uri("http://dbpedia.org/sparql"), "http://dbpedia.org");
-
-
-        public HomeController(ILogger<HomeController> logger)
+        private MySqlConnection db;
+        private User user = null;
+        public HomeController(ILogger<HomeController> logger, MySqlConnection _db)
         {
             _logger = logger;
+            db = _db;
+
         }
 
         public IActionResult Index()
         {
             HttpContext.Session.Remove("arrColors");
             HttpContext.Session.Remove("arrColorsUsed");
+
             return View();
         }
 
@@ -131,69 +137,158 @@ namespace DBPediaNetwork.Controllers
             List<ResultMainQuerySparqlModel> strDataBase = new List<ResultMainQuerySparqlModel>();
             List<ResultMainQuerySparqlModel> lstResources = new List<ResultMainQuerySparqlModel>();
             List<ResultMainQuerySparqlModel> lstLiterais = new List<ResultMainQuerySparqlModel>();
+            List<Node> dbNewNodes = new List<Node>();
             Node node = new Node();
+            List<Node> dbNodes = new List<Node>();
+            HomeBiz homeBiz = new HomeBiz(db);
+            int? dbIdNodeDad = null;
 
-            query = "select distinct ?property ?value where { " +
-                    "dbr:" + dbr + " ?property ?value . " +
+            string ssUser = HttpContext.Session.GetString(DBPediaNetwork.Controllers.AuthenticationController.SESSION_KEY_USER);
+            if (!String.IsNullOrEmpty(ssUser))
+            {
+                user = JsonConvert.DeserializeObject<User>(ssUser);
+            }
+
+            // Consulta se este dbr já está registrado no banco e traz seus filhos, se existirem.
+            dbNodes = homeBiz.GetNodes(dbr);
+
+            if (dbNodes.Count > 0)
+            {
+                var dbLstResources = dbNodes.Where(w => w.isResource).ToList();
+                var dbLstLiterais = dbNodes.Where(w => !w.isResource).ToList();
+
+                foreach (var item in dbLstResources)
+                {
+                    item.id = netWorkData.getNodeId();
+                    item.color = color;
+                    item.idDad = nodeDad.id;
+
+                    netWorkData.nodes.Add(item);
+                    netWorkData.edges.Add(new Edge
+                    {
+                        from = item.id,
+                        to = nodeDad.id,
+                        length = EDGE_LENGTH,
+                        color = node.color
+                    });
+                }
+
+                foreach (var item in dbLstLiterais)
+                {
+                    item.id = netWorkData.getNodeId();
+                    item.color = color;
+                    item.idDad = nodeDad.id;
+                    item.shape = "box";
+                    node.clicked = true;
+
+                    netWorkData.nodes.Add(item);
+                    netWorkData.edges.Add(new Edge
+                    {
+                        from = item.id,
+                        to = nodeDad.id,
+                        length = EDGE_LENGTH,
+                        color = node.color
+                    });
+                }
+            }
+            else
+            {
+                query = "select distinct ?property ?value where { " +
+                    "dbr:" + NormalizaDbr(dbr) + " ?property ?value . " +
                     "filter ( ?property not in ( rdf:type ) ) } " +
                     "limit 1000";
 
-            results = ExecutSPARQLQuery(query);
+                results = ExecutSPARQLQuery(query);
 
-            if (results != null)
-            {
-                foreach (SparqlResult result in results)
+                if (results != null)
                 {
-                    arrAux = result.ToString().Split(" , ");
-                    strDataBase.Add(new ResultMainQuerySparqlModel { property = arrAux[0].Replace("?property =", ""), value = arrAux[1].Replace("?value =", "") });
-                }
-
-                lstResources = strDataBase.Where(w => w.value.Contains("resource/")).Take(filterModel.qtdRerouces).ToList();
-                lstLiterais = strDataBase.Where(w => !w.value.Contains("http") && (w.value.Contains("@en") || !w.value.Contains("@")) && w.value.Length < 40 && w.property.Contains("property")).Take(filterModel.qtdRerouces).ToList();
-
-
-                for (int i = 0; i < lstResources.Count(); i++)
-                {
-                    node = new Node();
-                    node.id = netWorkData.getNodeId();
-                    node.label = GetResourceLabel(lstResources[i].value);
-                    node.source = lstResources[i].value;
-                    node.color = color;
-                    node.idDad = nodeDad.id;
-
-                    netWorkData.nodes.Add(node);
-                    netWorkData.edges.Add(new Edge
+                    foreach (SparqlResult result in results)
                     {
-                        from = node.id,
-                        to = nodeDad.id,
-                        length = EDGE_LENGTH,
-                        color = node.color
-                    });
-                }
+                        arrAux = result.ToString().Split(" , ");
+                        strDataBase.Add(new ResultMainQuerySparqlModel { property = arrAux[0].Replace("?property =", ""), value = arrAux[1].Replace("?value =", "") });
+                    }
 
-                for (int i = 0; i < lstLiterais.Count(); i++)
-                {
-                    node = new Node();
-                    node.id = netWorkData.getNodeId();
-                    node.label = GetLiteralLabel(lstLiterais[i]);
-                    node.source = lstLiterais[i].property;
-                    node.color = color;
-                    node.idDad = nodeDad.id;
-                    node.shape = "box";
-                    node.clicked = true;
+                    lstResources = strDataBase.Where(w => w.value.Contains("resource/")).Take(filterModel.qtdRerouces).ToList();
+                    lstLiterais = strDataBase.Where(w => !w.value.Contains("http") && (w.value.Contains("@en") || !w.value.Contains("@")) && w.value.Length < 40 && w.property.Contains("property")).Take(filterModel.qtdRerouces).ToList();
 
-                    netWorkData.nodes.Add(node);
-                    netWorkData.edges.Add(new Edge
+
+                    for (int i = 0; i < lstResources.Count(); i++)
                     {
-                        from = node.id,
-                        to = nodeDad.id,
-                        length = EDGE_LENGTH,
-                        color = node.color
-                    });
-                }
+                        node = new Node();
+                        node.id = netWorkData.getNodeId();
+                        node.label = GetResourceLabel(lstResources[i].value);
+                        node.source = lstResources[i].value;
+                        node.color = color;
+                        node.idDad = nodeDad.id;
+                        node.isResource = true;
 
-                netWorkData.nodes.Where(w => w.id == nodeDad.id).FirstOrDefault().color = color;
+                        dbNewNodes.Add(node);
+                        netWorkData.nodes.Add(node);
+                        netWorkData.edges.Add(new Edge
+                        {
+                            from = node.id,
+                            to = nodeDad.id,
+                            length = EDGE_LENGTH,
+                            color = node.color
+                        });
+                    }
+
+                    for (int i = 0; i < lstLiterais.Count(); i++)
+                    {
+                        node = new Node();
+                        node.id = netWorkData.getNodeId();
+                        node.label = GetLiteralLabel(lstLiterais[i]);
+                        node.source = lstLiterais[i].property;
+                        node.color = color;
+                        node.idDad = nodeDad.id;
+                        node.shape = "box";
+                        node.clicked = true;
+                        node.isResource = false;
+
+                        dbNewNodes.Add(node);
+                        netWorkData.nodes.Add(node);
+                        netWorkData.edges.Add(new Edge
+                        {
+                            from = node.id,
+                            to = nodeDad.id,
+                            length = EDGE_LENGTH,
+                            color = node.color
+                        });
+                    }
+
+                    // Insere os novos Nodes no banco.
+                    if (nodeDad.idDad == null)
+                    {
+                        dbIdNodeDad = homeBiz.InsertNode(nodeDad);
+                    }
+                    else
+                    {
+                        dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
+                    }
+
+
+                    if (dbIdNodeDad != null)
+                    {
+                        foreach (var item in dbNewNodes)
+                        {
+                            homeBiz.InsertNodeChild(item, dbIdNodeDad);
+                        }
+                    }
+                }
             }
+
+            if (dbIdNodeDad == null)
+            {
+                dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
+            }
+
+            // Registra no banco que o node foi clickado.
+            homeBiz.RisterPopularNode(dbIdNodeDad.Value, user);
+
+            db.Close();
+            db.Dispose();
+
+            netWorkData.nodes.Where(w => w.id == nodeDad.id).FirstOrDefault().color = color;
         }
 
         private string GetResourceLabel(string dbr)
@@ -203,7 +298,7 @@ namespace DBPediaNetwork.Controllers
             {
                 string query = "select ?label " +
                                "where { " +
-                               "dbr:" + dbr.Split("resource/")[1] + " rdfs:label ?label . " +
+                               "dbr:" + NormalizaDbr(dbr.Split("resource/")[1]) + " rdfs:label ?label . " +
                                "}";
 
                 SparqlResultSet results = ExecutSPARQLQuery(query);
@@ -239,7 +334,7 @@ namespace DBPediaNetwork.Controllers
             SparqlResultSet results = null;
             try
             {
-                results = endpoint.QueryWithResultSet(NormalizaQuery(query));
+                results = endpoint.QueryWithResultSet(query);
             }
             catch (Exception e)
             {
@@ -280,9 +375,9 @@ namespace DBPediaNetwork.Controllers
             return color;
         }
 
-        private string NormalizaQuery(string query)
+        private string NormalizaDbr(string query)
         {
-            return query.Replace(",", "\\,");
+            return query.Replace(",", "\\,").Replace("(", "\\(").Replace(")", "\\)");
         }
     }
 }

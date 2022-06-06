@@ -14,5 +14,6 @@ namespace DBPediaNetwork.Models
         public string color { get; set; }
         public int? idDad { get; set; }
         public string shape { get; set; } = "ellipse";
+        public bool isResource { get; set; } = false;
     }
 }
