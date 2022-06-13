@@ -25,11 +25,13 @@
                 var objPost = {
                     pesquisa: "http://dbpedia.org/resource/" + source,
                     qtdRerouces: $("#impResources").val(),
-                    qtdLiterais: $("#impLiterais").val()
+                    qtdLiterais: $("#impLiterais").val(),
+                    refresh: $("#checkRefresh").is(":checked")
                 }
 
                 $("#caminhoClick").html("<span>" + source + "</span>").css({ display: 'block' });
                 appIndex.searchPost(objPost);
+                $("#checkRefresh").prop("checked", false);
             }
         });
 
@@ -40,14 +42,20 @@
             }
         });
 
+        appIndex.modalConfirmacao(removeNode);
+
         $("#remove").click(function (e) {
             e.preventDefault();
             e.stopPropagation();
 
             //TODO: Investigar o por que o preloader não fecha se chamando nesse contexto.
+            $("#mi-modal").modal('show');
+        });
 
-            let id = $(this).attr("nodeid");
-            let nodeLabel = $(this).attr("nodeLabel");
+        function removeNode() {
+
+            let id = $("#remove").attr("nodeid");
+            let nodeLabel = $("#remove").attr("nodeLabel");
 
             $.post("Home/RemoveNode",
                 {
@@ -74,7 +82,7 @@
                     console.log("Ocorreu um erro ao Remover.");
                     app.preloader("off");
                 });
-        });
+        }
     },
     searchPost: function (objPost, endpoint = "Search") {
         app.preloader("on");
@@ -179,6 +187,17 @@
                 });
             }
         }
+    },
+    modalConfirmacao: function (run) {
+
+        $("#modal-btn-yes").on("click", function () {
+            run();
+            $("#mi-modal").modal('hide');
+        });
+
+        $("#modal-btn-no").on("click", function () {
+            $("#mi-modal").modal('hide');
+        });
     }
 };
 

@@ -59,8 +59,8 @@ namespace DBPediaNetwork.Controllers
             Data netWorkData = new Data();
             string dbr = filterModel.pesquisa.Split("resource/")[1];
 
-            filterModel.qtdRerouces = (filterModel.qtdRerouces < 10 && filterModel.qtdRerouces > 1) ? filterModel.qtdRerouces : 10;
-            filterModel.qtdLiterais = (filterModel.qtdLiterais < 10 && filterModel.qtdLiterais > 1) ? filterModel.qtdLiterais : 10;
+            filterModel.qtdRerouces = (filterModel.qtdRerouces < 99 && filterModel.qtdRerouces > 1) ? filterModel.qtdRerouces : 10;
+            filterModel.qtdLiterais = (filterModel.qtdLiterais < 99 && filterModel.qtdLiterais > 1) ? filterModel.qtdLiterais : 10;
 
 
             // Adiciona o node principal das pesquisas
@@ -152,10 +152,11 @@ namespace DBPediaNetwork.Controllers
             // Consulta se este dbr já está registrado no banco e traz seus filhos, se existirem.
             dbNodes = homeBiz.GetNodes(dbr);
 
-            if (dbNodes.Count > 0)
+            // Se não houver dados no banco ou o usuário solicitar o refresh dos dados.
+            if (dbNodes.Count > 0 && !filterModel.refresh)
             {
-                var dbLstResources = dbNodes.Where(w => w.isResource).ToList();
-                var dbLstLiterais = dbNodes.Where(w => !w.isResource).ToList();
+                var dbLstResources = dbNodes.Where(w => w.isResource).ToList().Take(filterModel.qtdRerouces);
+                var dbLstLiterais = dbNodes.Where(w => !w.isResource).ToList().Take(filterModel.qtdLiterais);
 
                 foreach (var item in dbLstResources)
                 {
@@ -194,9 +195,9 @@ namespace DBPediaNetwork.Controllers
             else
             {
                 query = "select distinct ?property ?value where { " +
-                    "dbr:" + NormalizaDbr(dbr) + " ?property ?value . " +
-                    "filter ( ?property not in ( rdf:type ) ) } " +
-                    "limit 1000";
+                        "dbr:" + NormalizaDbr(dbr) + " ?property ?value . " +
+                        "filter ( ?property not in ( rdf:type ) ) } " +
+                        "limit 1000";
 
                 results = ExecutSPARQLQuery(query);
 

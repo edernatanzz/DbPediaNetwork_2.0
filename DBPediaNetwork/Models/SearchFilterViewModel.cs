@@ -10,5 +10,6 @@ namespace DBPediaNetwork.Models
         public string pesquisa { get; set; }
         public int qtdRerouces { get; set; }
         public int qtdLiterais { get; set; }
+        public bool refresh { get; set; }
     }
 }
