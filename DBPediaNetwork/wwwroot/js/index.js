@@ -103,6 +103,28 @@
         if (data != null) {
             appIndex.data = data;
 
+            // Destaques para nodes Literais.
+            data.nodes.forEach(function (node) {
+                if (node.shape == "box") {
+                    let background = node.color;
+
+                    node.borderWidth = 2;
+                    node.color = {
+                        border: background,
+                        background: "#FFF",
+                        highlight: {
+                            border: background,
+                            background: "#FFF"
+                        },
+                        hover: {
+                            border: background,
+                            background: "#FFF"
+                        }
+                    }
+                }
+            });
+
+
             var container = document.getElementById("mynetwork");
             var options = {};
             var network = new vis.Network(container, data, options);
