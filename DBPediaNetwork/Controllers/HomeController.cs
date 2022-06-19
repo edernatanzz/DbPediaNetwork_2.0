@@ -188,7 +188,8 @@ namespace DBPediaNetwork.Controllers
                         from = item.id,
                         to = nodeDad.id,
                         length = EDGE_LENGTH,
-                        color = node.color
+                        color = node.color,
+                        label = GetEdgeLabel(new ResultMainQuerySparqlModel { property = item.source })
                     });
                 }
             }
@@ -203,7 +204,7 @@ namespace DBPediaNetwork.Controllers
 
                 if (results != null)
                 {
-                    foreach (SparqlResult result in results)
+                    foreach (SparqlResult result in results.Where(w => !w.ToString().ToLower().Contains("template"))) // Não traz mais as propriedades Template
                     {
                         arrAux = result.ToString().Split(" , ");
                         strDataBase.Add(new ResultMainQuerySparqlModel { property = arrAux[0].Replace("?property =", ""), value = arrAux[1].Replace("?value =", "") });
@@ -253,7 +254,8 @@ namespace DBPediaNetwork.Controllers
                             from = node.id,
                             to = nodeDad.id,
                             length = EDGE_LENGTH,
-                            color = node.color
+                            color = node.color,
+                            label = GetEdgeLabel(lstLiterais[i])
                         });
                     }
 
@@ -319,14 +321,20 @@ namespace DBPediaNetwork.Controllers
 
         private string GetLiteralLabel(ResultMainQuerySparqlModel result)
         {
-            var aux = result.property.Split("/property/")[1];
-            var aux2 = result.value;
-            if (aux2.Contains("@"))
+            var aux = result.value;
+            if (aux.Contains("@"))
             {
-                aux2 = aux2.Split("@")[0];
+                aux = aux.Split("@")[0];
             }
 
-            return aux + ":" + aux2;
+            return aux.Trim();
+        }
+
+        private string GetEdgeLabel(ResultMainQuerySparqlModel result)
+        {
+            var aux = result.property.Split("/property/")[1];
+
+            return aux.Trim();
         }
 
         private SparqlResultSet ExecutSPARQLQuery(string query)

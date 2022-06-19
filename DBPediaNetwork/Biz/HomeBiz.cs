@@ -63,7 +63,7 @@ namespace DBPediaNetwork.Biz
             MySqlConnection conn = GetConnection();
 
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand($"CALL P_INS_NODE('{node.label}', '{node.source}', {(node.isResource ? 1 : 0)})", conn);
+            MySqlCommand cmd = new MySqlCommand($"CALL P_INS_NODE('{node.label.Trim()}', '{node.source.Trim()}', {(node.isResource ? 1 : 0)})", conn);
 
             using (var reader = cmd.ExecuteReader())
             {
@@ -87,7 +87,7 @@ namespace DBPediaNetwork.Biz
             MySqlConnection conn = GetConnection();
 
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand($"CALL P_SEL_NODE_ID_BY_URI('{nodeDad.source}')", conn);
+            MySqlCommand cmd = new MySqlCommand($"CALL P_SEL_NODE_ID_BY_URI('{nodeDad.source.Trim()}')", conn);
 
             using (var reader = cmd.ExecuteReader())
             {
@@ -111,7 +111,7 @@ namespace DBPediaNetwork.Biz
 
             MySqlConnection conn = GetConnection();
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand($"CALL P_INS_NODE('{node.label}', '{node.source}', {(node.isResource ? 1 : 0)})", conn);
+            MySqlCommand cmd = new MySqlCommand($"CALL P_INS_NODE('{node.label.Trim()}', '{node.source.Trim()}', {(node.isResource ? 1 : 0)})", conn);
 
             using (var reader = cmd.ExecuteReader())
             {
