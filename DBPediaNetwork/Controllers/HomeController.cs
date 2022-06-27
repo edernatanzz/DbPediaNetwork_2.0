@@ -118,7 +118,7 @@ namespace DBPediaNetwork.Controllers
         public ActionResult AutoCompleteSearch(string search)
         {
             string query = "select ?x where { " +
-                           "?x a foaf:Person. " +
+                           "?x ?y ?z. " +
                            "filter(regex(lcase(str(?x)), lcase(\"^http://dbpedia.org/resource/" + search + "\"))) } " +
                            "limit 20";
 
@@ -385,7 +385,7 @@ namespace DBPediaNetwork.Controllers
             SparqlResultSet results = null;
             try
             {
-                //endpoint.Timeout = 80000;
+                endpoint.Timeout = 80000;
                 results = endpoint.QueryWithResultSet(query);
             }
             catch (Exception e)
