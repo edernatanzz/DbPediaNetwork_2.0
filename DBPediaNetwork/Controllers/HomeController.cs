@@ -1,6 +1,7 @@
 ﻿using DBPediaNetwork.Biz;
 using DBPediaNetwork.Models;
 using DBPediaNetwork.Models.Authentication;
+using DBPediaNetwork.Models.Home;
 using DBPediaNetwork.Models.vis.js;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -38,8 +39,11 @@ namespace DBPediaNetwork.Controllers
         {
             HttpContext.Session.Remove("arrColors");
             HttpContext.Session.Remove("arrColorsUsed");
+            HomeBiz homeBiz = new HomeBiz(db);
+            HomeIndexModel model = new HomeIndexModel(homeBiz.GetAutocompleteSource());
 
-            return View();
+
+            return View(model);
         }
 
         public IActionResult Privacy()
@@ -66,7 +70,7 @@ namespace DBPediaNetwork.Controllers
             // Adiciona o node principal das pesquisas
             Node nodePrincipal = new Node();
             nodePrincipal.id = netWorkData.getNodeId();
-            nodePrincipal.label = GetResourceLabel(filterModel.pesquisa);
+            //nodePrincipal.label = GetResourceLabel(filterModel.pesquisa);
             nodePrincipal.source = filterModel.pesquisa;
             nodePrincipal.clicked = true;
             nodePrincipal.idDad = null;
@@ -108,6 +112,34 @@ namespace DBPediaNetwork.Controllers
 
             HttpContext.Session.SetString(KEY_NETWORK_DATA, JsonConvert.SerializeObject(netWorkData));
             return Json(netWorkData);
+        }
+
+        [HttpGet]
+        public ActionResult AutoCompleteSearch(string search)
+        {
+            string query = "select ?x where { " +
+                           "?x a foaf:Person. " +
+                           "filter(regex(lcase(str(?x)), lcase(\"^http://dbpedia.org/resource/" + search + "\"))) } " +
+                           "limit 20";
+
+            var results = ExecutSPARQLQuery(query);
+
+            List<string> result = new List<string>();
+            string[] arrAux = { };
+
+            if (results != null)
+            {
+                foreach (SparqlResult item in results) // Traz apenas resources
+                {
+                    arrAux = item.ToString().Split("?x = http://dbpedia.org/resource/");
+                    if (arrAux.Length > 1)
+                    {
+                        result.Add(arrAux[1].Trim());
+                    }
+                }
+            }
+
+            return Json(result);
         }
 
         private void removeNode(Node node, ref Data netWorkData)
@@ -155,6 +187,11 @@ namespace DBPediaNetwork.Controllers
             // Se não houver dados no banco ou o usuário solicitar o refresh dos dados.
             if (dbNodes.Count > 0 && !filterModel.refresh)
             {
+                if (String.IsNullOrEmpty(nodeDad.label))
+                {
+                    nodeDad.label = homeBiz.GetLabelNode(nodeDad);
+                }
+
                 var dbLstResources = dbNodes.Where(w => w.isResource).ToList().Take(filterModel.qtdRerouces);
                 var dbLstLiterais = dbNodes.Where(w => !w.isResource).ToList().Take(filterModel.qtdLiterais);
 
@@ -195,6 +232,11 @@ namespace DBPediaNetwork.Controllers
             }
             else
             {
+                if (String.IsNullOrEmpty(nodeDad.label))
+                {
+                    nodeDad.label = GetResourceLabel(nodeDad.source);
+                }
+
                 query = "select distinct ?property ?value where { " +
                         "dbr:" + NormalizaDbr(dbr) + " ?property ?value . " +
                         "filter ( ?property not in ( rdf:type ) ) } " +
@@ -343,6 +385,7 @@ namespace DBPediaNetwork.Controllers
             SparqlResultSet results = null;
             try
             {
+                //endpoint.Timeout = 80000;
                 results = endpoint.QueryWithResultSet(query);
             }
             catch (Exception e)

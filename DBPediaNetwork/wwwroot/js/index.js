@@ -4,6 +4,7 @@
         appIndex.setCanvasHeight();
         appIndex.buttonFunctions();
         appIndex.hideRigthClickMenu();
+        appIndex.autocompleteSearch();
     },
     setCanvasHeight: function () {
         $(window).resize(function () {
@@ -219,6 +220,35 @@
 
         $("#modal-btn-no").on("click", function () {
             $("#mi-modal").modal('hide');
+        });
+    },
+    autocompleteSearch: function () {
+        //$("#inpSearch").on("input", function (e) {
+        //    e.stopPropagation();
+        //    e.preventDefault();
+        //    debugger;
+
+        //    let search = $(this).val();
+        //    if (search.length > 3) {
+
+
+        //        $.get("Home/AutoCompleteSearch",
+        //            { search: search },
+        //            function (source) {
+        //                debugger;
+        //                $("#inpSearch").autocomplete({
+        //                    source: source
+        //                });
+        //                $("#inpSearch").autocomplete('search');
+        //            }
+        //        );
+        //    }
+        //});
+
+        let source = $("#autocompleteSource").val().split(", ");
+
+        $("#inpSearch").autocomplete({
+            source: source
         });
     }
 };

@@ -56,6 +56,30 @@ namespace DBPediaNetwork.Biz
             return lstNodes;
         }
 
+        internal List<string> GetAutocompleteSource()
+        {
+            List<string> result = new List<string>();
+
+            MySqlConnection conn = GetConnection();
+
+            conn.Open();
+            MySqlCommand cmd = new MySqlCommand($"CALL P_SEL_AUTOCOMPLETE_SOURCE", conn);
+
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    result.Add(reader[0].ToString());
+                }
+
+                reader.Close();
+            }
+
+            conn.Close();
+
+            return result;
+        }
+
         internal int? InsertNode(Node node)
         {
             int? _idReturn = null;
@@ -163,6 +187,30 @@ namespace DBPediaNetwork.Biz
             conn.Close();
 
             return _return;
+        }
+
+        internal string GetLabelNode(Node nodeDad)
+        {
+            string labelNode = string.Empty;
+
+            MySqlConnection conn = GetConnection();
+            conn.Open();
+
+            MySqlCommand cmd = new MySqlCommand($"CALL P_SEL_LABEL_NODE('{nodeDad.source}')", conn);
+
+            using (var reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    labelNode = reader[0].ToString();
+                }
+
+                reader.Close();
+            }
+
+            conn.Close();
+
+            return labelNode;
         }
 
 
