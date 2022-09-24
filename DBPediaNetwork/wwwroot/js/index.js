@@ -58,7 +58,7 @@
             let id = $("#remove").attr("nodeid");
             let nodeLabel = $("#remove").attr("nodeLabel");
 
-            $.post("Home/RemoveNode",
+            $.post(HomeAction + "/Home/RemoveNode",
                 {
                     id: id
                 },
@@ -88,7 +88,7 @@
     searchPost: function (objPost, endpoint = "Search") {
         app.preloader("on");
 
-        $.post("Home/" + endpoint,
+        $.post(HomeAction + "/Home/" + endpoint,
             { filterModel: objPost },
             function (result) {
                 appIndex.buildChart(result);
