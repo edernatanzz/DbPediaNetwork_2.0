@@ -1,0 +1,150 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Registration Page";
+    string loginFailedMsg = (string)ViewData[DBPediaNetwork.Controllers.AuthenticationController.VIEWDATA_FIELD_ERROR];
+}
+
+
+<style>
+    .form-register {
+        width: 100%;
+        max-width: 330px;
+        padding: 15px;
+        margin: 0 auto;
+    }
+
+        .form-register .checkbox {
+            font-weight: 400;
+        }
+
+        .form-register .form-control {
+            position: relative;
+            box-sizing: border-box;
+            height: auto;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+            .form-register .form-control:focus {
+                z-index: 2;
+            }
+
+        .form-register input[type="email"] {
+            margin-bottom: -1px;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .form-register input[type="password"] {
+            margin-bottom: 10px;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+
+    .nav-pills .nav-link {
+        border-radius: 0.25rem;
+        font-size: 12px;
+        text-transform: uppercase;
+        padding: 17px 29px 16px;
+        line-height: 1;
+        background-color: #f5f5f5;
+        font-weight: 500;
+        color: rgba(0,0,0,.6);
+        margin: 0.5rem;
+    }
+</style>
+
+
+<div class="container">
+    <div class="text-center">
+
+        <!-- Pills navs -->
+        <ul class="nav nav-pills nav-justified mb-3 form-register" id="ex1" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="tab-login" asp-controller="Authentication" asp-action="Index" role="tab"
+                   aria-controls="pills-login" aria-selected="true">Login</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="tab-register" disabled="disabled" asp-controller="Authentication" asp-action="Register" role="tab"
+                   aria-controls="pills-register" aria-selected="false">Registrar</a>
+            </li>
+        </ul>
+
+        <form class="form-register" asp-controller="Authentication" asp-action="Register" method="post">
+            <!-- Email input -->
+            <div class="form-outline mb-4">
+                <input type="text" maxlength="100" name="name" id="form2Example1" class="form-control" placeholder="Nome" required />
+            </div>
+
+            <!-- Email input -->
+            <div class="form-outline mb-4">
+                <input type="email" name="email" id="form2Example1" class="form-control" placeholder="Email" required />
+            </div>
+
+            <!-- Password input -->
+            <div class="form-outline mb-4">
+                <input type="password" name="password" id="form2Example2" class="form-control" placeholder="Senha" required />
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-outline mb-4">
+                <input type="password" name="cpassword" id="form2Example2" class="form-control" placeholder="Confirmar senha" required />
+            </div>
+
+            <!-- Validation button -->
+            <button type="button" class="btn btn-primary btn-block mb-4" onclick="Registration()">Registrar</button>
+
+            <!-- Submit button -->
+            <button type="submit" id="true-submit" style="display:none"></button>
+
+        </form>
+
+        <p name="output-error" style="color: red">
+            @if (!String.IsNullOrEmpty(loginFailedMsg))
+            {
+                @loginFailedMsg
+            }
+        </p>
+    </div>
+</div>
+
+<script>
+    function Registration() {
+        if ($("[name='name']").val() && $("[name='email']").val() && $("[name='password']").val()) {
+
+            if ($("[name='password']").val() !== $("[name='cpassword']").val()) {
+                $("[name='cpassword']").val("");
+                $(".form-register div").addClass("was-validated");
+
+                $("[name='output-error']").text("A confirmação de senha deve ser igual a senha.");
+            }
+            else {
+                $("[name='output-error']").text("");
+
+                $("#true-submit").click();
+
+                //let model = {
+                //    name: $("[name='name']").val(),
+                //    email: $("[name='email']").val(),
+                //    password: $("[name='password']").val()
+                //}
+
+
+                //$.post("/Authentication/RegisterUser",
+                //    { user: model },
+                //    function (result) {
+                //    })
+                //    .fail(function (result) {
+                //        console.log("Ocorreu um erro ao tentar registrar.");
+                //        app.preloader("off");
+                //    });
+            }
+
+        }
+        else {
+            $(".form-register div").addClass("was-validated");
+            $("[name='output-error']").text("Campos obrigatórios inválidos.");
+        }
+    }
+</script>
